@@ -4,10 +4,11 @@ import os
 import copy
 from bs4 import BeautifulSoup as soup
 
-### ASSIGN IN THE SCRIPT
-cardshtml = "tchtml3.html" # The directory and name HTML File
-cardscsv = "cards.csv" # The directory and name of the outputted CSV
 
+### ASSIGN IN THE SCRIPT - If not using drag and drop or command line
+cardshtml = "INSERT_YOUR_HTML_HERE.html" # The directory and name HTML File
+
+#If using command line or drag and drop, use arguments passed from the CL or dropped filed
 try:
     if sys.argv[1] != None:
         cardshtml = sys.argv[1]
@@ -15,20 +16,33 @@ try:
         cardscsv = sys.argv[2]
 except IndexError:
     pass
+
+event = os.path.basename(cardshtml) # Get the event name, remove absolute path prefix
+if event.endswith('.html'): event = event[:-5] # Remove .html suffix
+cardscsv = event + ".csv" # The directory and name of the outputted CSV, here we set it to the event name
+
     
 
 def cards2csv(cardshtml, cardscsv):
 
     businesscards = open(cardshtml,'r').read()
     html = soup(businesscards)
-    event = os.path.basename(cardshtml)
-    if event.endswith('.html'):
-        event = event[:-5]
+
+    priorityCodes = [" - A", " - B", " - C"]
+    if event.endswith(priorityCodes[0]):
+        priority = "A"
+    elif event.endswith(priorityCodes[1]):
+        priority = "B"
+    elif event.endswith(priorityCodes[2]):
+        priority = "C"
+    else:
+        priority = "No priority specified"
     
     cards = [ ]
 
     csv_row = {
         "event" : event,
+        "priority" : priority,
         "firstname" : "",
         "lastname" : "",
         "position" : "",
@@ -42,9 +56,10 @@ def cards2csv(cardshtml, cardscsv):
         "address" : "",
     }
 
-    #Dictionaries don't preserve order so we must state the order we want out
+    #Dictionaries don't preserve order so we must state the order we want outputted - OrderedDict may overcome this?
     csv_fields = [
         "event",
+        "priority",
         "firstname",
         "lastname" ,
         "position" ,
