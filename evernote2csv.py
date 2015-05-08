@@ -20,7 +20,7 @@ except IndexError:
 
 event = os.path.basename(cardshtml) # Get the event name, remove absolute path prefix
 if event.endswith('.html'): event = event[:-5] # Remove .html suffix
-cardscsv = event + ".csv" # The directory and name of the outputted CSV, here we set it to the event name
+cardscsv = os.path.join("output", event + ".csv") # The directory and name of the outputted CSV, here we set it to the event name
 
 def cards2csv(cardshtml, cardscsv):
 
@@ -38,9 +38,12 @@ def cards2csv(cardshtml, cardscsv):
     else:
         priority = "No priority specified"
 
+    event_name = event
+
     # This block will get the name and remove opening and trailing white space
     if event.count("-") == 2:
         inputters_name = event.split("-")[1] #The name is put inbetween two dashes i.e. TechCrunch - Joe Blogs - B
+        event_name = event.split("-")[0].strip(" ")
         if inputters_name[0] == " ":
             inputters_name = inputters_name.strip(" ") # If trailing opeing space, remove it
     else:
@@ -49,40 +52,56 @@ def cards2csv(cardshtml, cardscsv):
     cards = [ ]
 
     csv_row = {
-        "event" : event,
         "priority" : priority,
+        "notes" : "",
+        "C": "",
+        "D": "",
         "inputtersname": inputters_name,
+        "F": "",
+        "G": "",
         "firstname" : "",
+        "I": "",
         "lastname" : "",
+        "K": "",
         "position" : "",
         "company" : "",
-        "mobile" : "",
+        "N": "",
+        "street": "",
+        "P": "",
+        "city": "",
+        "R": "",
+        "postcode": "",
+        "country": "",
         "telephone" : "",
-        "linkedin" : "",
-        "fax" : "",
-        "twitter" : "",
-        "email" : "",
-        "address" : "",
-        "notes" : ""
+        "V": "",
+        "email" : ""
     }
 
-    #Dictionaries don't preserve order so we must state the order we want outputted - OrderedDict may overcome this?
+    # Need to handle phone number conflicts, and address breakdown
     csv_fields = [
-        "event",
         "priority",
+        "notes",
+        "C",
+        "D",
         "inputtersname",
+        "F",
+        "G",
         "firstname",
+        "I",
         "lastname" ,
+        "K",
         "position" ,
         "company",
-        "mobile",
+        "N",
+        "street",
+        "P",
+        "city",
+        "R",
+        "postcode",
+        "country",
         "telephone",
-        "linkedin",
-        "fax",
-        "twitter",
-        "email",
-        "address",
-        "notes"
+        "V",
+        "email"
         ]
 
     for contact in html.find_all('div', style=True):
@@ -96,11 +115,9 @@ def cards2csv(cardshtml, cardscsv):
                     if "@" in link.text and "." in link.text:
                         #check it's a valid email
                         row['email'] = link.text.encode('utf-8')
-                if "www.linkedin.com" in link['href']:
-                    row['linkedin'] = link['href'].encode('utf-8')
                 
                 if "maps.google.com" in link['href']:
-                    row['address'] = link.text.encode('utf-8')
+                    row['street'] = link.text.encode('utf-8')
 
             for span in contact.find_all('span', style=True):
                 #print span.get_text()
@@ -128,17 +145,12 @@ def cards2csv(cardshtml, cardscsv):
             for div in contact.find_all('div', style=True):
                 if "x-evernote:phone;" in div['style']:
                     
-                    if "mobile" in div.text:
-                        row['mobile'] = div.text.replace("mobile", "").replace(" ", "").replace("\n", "").encode('utf-8')
-                    
                     if "phone" in div.text:
                         row['telephone'] = div.text.replace("phone", "").replace(" ", "").replace("\n", "").encode('utf-8')
-                        
-                    if "fax" in div.text:
-                        row['fax'] = div.text.replace("fax", "").replace(" ", "").replace("\n", "").encode('utf-8')
-                        
-                if "x-evernote:twitter;" in div['style']:
-                    row['twitter'] = div.a.text.encode('utf-8')
+
+                    # Mobile number takes precendence                        
+                    if "mobile" in div.text:
+                        row['telephone'] = div.text.replace("mobile", "").replace(" ", "").replace("\n", "").encode('utf-8')
                     
                 if "x-evernote:note-body;" in div['style']:
                     if len(div.contents) > 0:
@@ -151,6 +163,12 @@ def cards2csv(cardshtml, cardscsv):
             
 
     #Write to the CSV file1
+    dirname = os.path.dirname(cardscsv)
+    try:
+        os.stat(dirname)
+    except:
+        os.mkdir(dirname)
+
     try:
         with open(cardscsv, 'wb') as csvfile:
             csvfile.write(codecs.BOM_UTF8) # ESSENTIAL FOR PROPER UTF-8 ENCODING - DO NOT REMOVE
