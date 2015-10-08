@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup as soup
 
 
 ### ASSIGN IN THE SCRIPT - If not using drag and drop or command line
-cardshtml = "The Next Web Europe 2015 - C" + ".html" # The directory and name HTML File
+cardshtml = "TCDisrupt SF 2015 - C" + ".html" # The directory and name HTML File
 
 #If using command line or drag and drop, use arguments passed from the CL or dropped filed
 try:
@@ -131,7 +131,8 @@ def cards2csv(cardshtml, cardscsv):
                         row['lastname'] = name[1] #last name
                         #print row['lastname']
                     elif len(name) == 3:
-                        row['lastname'] = unicode(name[1] + " " + name[2])
+                        lastname = name[0].decode('utf-8') + u" " + name[1].decode('utf-8')
+                        row['lastname'] = lastname.encode('utf-8')
                         #print row['lastname']
                     else:
                         row['lastname'] = ""
